@@ -228,7 +228,7 @@ function render() {
               }
             </div>
             <button class="waze-btn" onclick="waze('${encodeURIComponent(s.name)}')">נווט ב-Waze ↗</button>
-            ${s.user ? `<button class="del-btn" onclick="deleteTrip('${s.fbId||''}')">🗑</button>` : ''}
+            ${s.fbId ? `<button class="del-btn" onclick="deleteTrip('${s.fbId}')">🗑</button>` : ''}
           ` : ''}
         </div>
       </div>
