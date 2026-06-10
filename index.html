@@ -306,23 +306,23 @@ window.addPhoto = function(fbId, localId, input) {
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       const base64 = canvas.toDataURL('image/jpeg', 0.6);
-
-      // show preview immediately
       const pz = document.getElementById('pz-' + localId);
       if (pz) pz.innerHTML = `<img src="${base64}" alt="תמונה" />`;
-
-      // save to Firebase
       if (fbId) {
         try {
           await updateDoc(doc(db, 'trips', fbId), { photo: base64 });
+          alert('✓ תמונה נשמרה!');
         } catch(err) {
-          console.error(err);
-          alert('שגיאה בשמירה: ' + err.message);
+          alert('שגיאה: ' + err.code + '\n' + err.message);
         }
+      } else {
+        alert('שגיאה: הנסיעה לא שמורה ב-Firebase');
       }
     };
+    img.onerror = () => alert('שגיאה בטעינת תמונה');
     img.src = e.target.result;
   };
+  reader.onerror = () => alert('שגיאה בקריאת קובץ');
   reader.readAsDataURL(file);
 }
 
