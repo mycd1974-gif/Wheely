@@ -70,6 +70,16 @@
     .sync-status.err { color: rgba(200,100,100,0.7); }
     .admin-hint { max-width: 480px; margin: 0 auto; padding: 8px 28px 0; text-align: left; }
     .admin-hint button { background: none; border: none; color: rgba(255,255,255,0.08); font-size: 0.7rem; cursor: pointer; }
+    .nt-tab { background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .nt-tab.active { background: var(--gold-pale); border-color: var(--gold); color: var(--gold-light); }
+    .dest-card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+    .dest-emoji { font-size: 1.6rem; min-width: 36px; text-align: center; }
+    .dest-info { flex: 1; }
+    .dest-name { font-size: 0.92rem; font-weight: 500; color: var(--white); margin-bottom: 3px; }
+    .dest-sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+    .dest-badge { font-size: 0.7rem; background: var(--gold-pale); color: var(--gold-light); border-radius: 6px; padding: 2px 8px; white-space: nowrap; display: inline-block; margin-bottom: 6px; }
+    .dest-badge.ready { background: rgba(76,175,80,0.15); color: #81C784; }
+    .dest-waze { background: rgba(46,204,250,0.12); border: 1px solid rgba(46,204,250,0.25); border-radius: 8px; padding: 7px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: #2ECCFA; cursor: pointer; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -131,6 +141,27 @@
           💬 שלחו לווילי בוואטסאפ
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div class="add-section" style="display:block;margin-top:32px;">
+  <div class="add-label">המלצות לתכנון מסלול 🗺️</div>
+  <div class="add-card" style="padding:16px 16px 8px;">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="nt-tab" data-mins="0">הכל</button>
+      <button class="nt-tab" data-mins="20">עד 20 דק׳</button>
+      <button class="nt-tab" data-mins="40">עד 40 דק׳</button>
+      <button class="nt-tab" data-mins="60">עד שעה</button>
+      <button class="nt-tab" data-mins="90">עד 90 דק׳</button>
+      <button class="nt-tab" data-mins="120">עד 2 שעות</button>
+    </div>
+    <div id="destList" style="display:none;"></div>
+    <div style="text-align:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+      <button id="recommendBtn" style="background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;text-decoration:underline;text-underline-offset:3px;">
+        🐾 יש לכם המלצה למקום שווילי יאהב? כתבו לנו!
+      </button>
     </div>
   </div>
 </div>
@@ -303,6 +334,7 @@ function updateProgressLine() {
 onSnapshot(query(collection(db,'stops'), orderBy('createdAt','asc')), snap => {
   allStops = snap.docs.map(d => ({ fbId: d.id, ...d.data() }));
   render();
+  renderDests();
 }, err => {
   console.error('Firebase error:', err);
 });
@@ -358,7 +390,7 @@ window.deleteTrip = async function(fbId) {
 }
 
 // ── GEOCODING + INVITE ───────────────────────────────────────────────────────
-const MY_PHONE = '972522339090'; // הכניסי את המספר שלך: 
+const MY_PHONE = 'PHONE_NUMBER_HERE'; // הכניסי את המספר שלך: 972501234567
 let currentInviteMsg = '';
 
 const TLV = { lat: 32.0853, lng: 34.7818 };
@@ -425,7 +457,100 @@ window.sendWhatsapp = function() {
   window.open(`https://wa.me/${MY_PHONE}?text=${encodeURIComponent(currentInviteMsg)}`, '_blank');
 }
 
+window.recommendPlace = function() {
+  const msg = `היי! 🐾\nיש לי המלצה למקום שווילי יאהב!\n\nשם המקום: \nכתובת: \nלמה זה מושלם לכלבים: `;
+  window.open(`https://wa.me/${MY_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
 window.waze = dest => window.open(`https://waze.com/ul?q=${dest}&navigate=yes`,'_blank');
+
+// ── DESTINATIONS ──────────────────────────────────────────────────────────────
+const DESTS = [
+  // עד 15 דק׳
+  { emoji:'🏖️', name:'חוף הילטון', sub:'חוף כלבים — צפון לחוף המוכרז', minutes:8,  address:'חוף הילטון תל אביב' },
+  { emoji:'🏖️', name:'חוף צ׳רלס קלור', sub:'חוף כלבים — דרום לחוף המוכרז', minutes:10, address:'חוף צ׳רלס קלור תל אביב' },
+  { emoji:'🌳', name:'פארק הירקון — מזרח', sub:'שטח ירוק ענק, שבילים ומים', minutes:12, address:'פארק הירקון מזרח תל אביב' },
+  { emoji:'🏖️', name:'חוף תל ברוך', sub:'חוף כלבים עם מקלחות 🚿', minutes:15, address:'חוף תל ברוך תל אביב' },
+  // 15-30 דק׳
+  { emoji:'🌳', name:'פארק הסביבתי הרצליה', sub:'שטח פתוח ענק, טבע אמיתי', minutes:20, address:'פארק הסביבתי הרצליה' },
+  { emoji:'🏖️', name:'חוף גבעת עליה', sub:'חוף כלבים ביפו', minutes:20, address:'חוף גבעת עליה יפו' },
+  { emoji:'🌾', name:'שדות הרצליה', sub:'שדה פתוח, ריחות טבע, חופש!', minutes:22, address:'פארק השדות הרצליה' },
+  { emoji:'🌳', name:'פארק אפולוניה', sub:'גן לאומי על הים, מותר כלבים ברצועה', minutes:25, address:'פארק אפולוניה הרצליה' },
+  // 30-45 דק׳
+  { emoji:'🏖️', name:'חוף שדות ים', sub:'חוף שקט ויפה ליד קיסריה', minutes:30, address:'חוף שדות ים קיסריה' },
+  { emoji:'🌾', name:'יער בן שמן', sub:'יער קק"ל, שבילים ירוקים, מושלם לריצה', minutes:35, address:'יער בן שמן' },
+  { emoji:'🌳', name:'גן לאומי בית גוברין', sub:'טבע ושדות פתוחים', minutes:40, address:'גן לאומי בית גוברין' },
+  { emoji:'🏖️', name:'חוף נתניה', sub:'חוף ארוך ופתוח', minutes:40, address:'חוף נתניה' },
+  // 45-60 דק׳
+  { emoji:'🏛️', name:'קיסריה', sub:'חוף ועתיקות, טיול מהמם', minutes:50, address:'קיסריה' },
+  { emoji:'🌳', name:'יער חרוב', sub:'יער ירוק בשפלה, שקט ומוצל', minutes:50, address:'יער חרוב שפלה' },
+  { emoji:'🏖️', name:'חוף עתלית', sub:'חוף בוץ מיוחד ליד הכרמל', minutes:55, address:'חוף עתלית' },
+  { emoji:'🌾', name:'פארק מגידו', sub:'עמק יזרעאל הירוק', minutes:60, address:'תל מגידו' },
+  // 60-90 דק׳
+  { emoji:'🏔️', name:'הר הכרמל — חיפה', sub:'יער, נוף פנורמי ואוויר הרים', minutes:70, address:'פארק הכרמל חיפה' },
+  { emoji:'🌊', name:'עכו העתיקה', sub:'חומות, ים ותרבות', minutes:75, address:'עכו' },
+  { emoji:'🌳', name:'פארק ראש הנקרה', sub:'מערות ים מרהיבות', minutes:80, address:'ראש הנקרה' },
+  { emoji:'🌾', name:'עמק החולה', sub:'טבע ועופות נדירים', minutes:85, address:'שמורת טבע עמק החולה' },
+  // 90-120 דק׳
+  { emoji:'🏔️', name:'הר מירון', sub:'הר הגבוה בגליל, נוף מדהים', minutes:90, address:'הר מירון' },
+  { emoji:'🌊', name:'כנרת — טבריה', sub:'אגם, שביל ואוויר רענן', minutes:100, address:'טיילת טבריה כנרת' },
+  { emoji:'🌳', name:'בניאס — הרמון', sub:'מפל ונחל מושלמים', minutes:110, address:'שמורת טבע בניאס' },
+  { emoji:'🏔️', name:'קיבוץ מעיין ברוך', sub:'🏔️ היעד הצפוני של ווילי!', minutes:120, address:'קיבוץ מעיין ברוך' },
+  // חלום
+  { emoji:'🏖️', name:'אילת', sub:'🏖️ היעד הדרומי הגדול!', minutes:240, address:'אילת' },
+];
+
+let currentFilter = 0;
+
+window.filterDests = function(mins, btn) {
+  currentFilter = mins;
+  document.querySelectorAll('.nt-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderDests();
+}
+
+function renderDests() {
+  const willyMinutes = Math.max(...allStops.filter(s=>s.type==='done'||s.type==='current').map(s=>s.minutes||0), 1);
+  const list = document.getElementById('destList');
+  if (!list) return;
+
+  const filtered = currentFilter === 0 ? DESTS : DESTS.filter(d => d.minutes <= currentFilter);
+
+  list.innerHTML = filtered.map(d => {
+    const canGo = d.minutes <= willyMinutes;
+    return `
+      <div class="dest-card">
+        <div class="dest-emoji">${d.emoji}</div>
+        <div class="dest-info">
+          <div class="dest-name">${d.name}</div>
+          <div class="dest-sub">${d.sub}</div>
+          <span class="dest-badge ${canGo ? 'ready' : ''}">${canGo ? '✅ ווילי מוכן!' : `~${d.minutes} דק׳ נסיעה`}</span>
+        </div>
+        <button class="dest-waze" onclick="waze('${encodeURIComponent(d.address)}')">Waze ↗</button>
+      </div>
+    `;
+  }).join('');
+}
+
+setTimeout(renderDests, 2000);
+
+// event delegation for filter tabs
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.nt-tab');
+  if (!btn) return;
+  currentFilter = parseInt(btn.dataset.mins) || 0;
+  document.querySelectorAll('.nt-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('destList').style.display = 'block';
+  renderDests();
+});
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'recommendBtn') {
+    const msg = `היי! 🐾\nיש לי המלצה למקום שווילי יאהב!\n\nשם המקום: \nכתובת: \nלמה זה מושלם לכלבים: `;
+    window.open(`https://wa.me/${MY_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+});
 
 window.openWazeForDistance = function() {
   const addr = document.getElementById('ntAddr').value.trim();
