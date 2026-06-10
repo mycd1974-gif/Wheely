@@ -8,43 +8,25 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:        #1B2A4A;
-      --surface:   rgba(255,255,255,0.06);
-      --line:      rgba(255,255,255,0.12);
-      --gold:      #C8973A;
-      --gold-light:#E8B96A;
-      --gold-pale: rgba(200,151,58,0.15);
-      --white:     #FFFFFF;
-      --muted:     rgba(255,255,255,0.42);
-      --future-dot:#3A5080;
+      --bg: #1B2A4A; --surface: rgba(255,255,255,0.06); --line: rgba(255,255,255,0.12);
+      --gold: #C8973A; --gold-light: #E8B96A; --gold-pale: rgba(200,151,58,0.15);
+      --white: #FFFFFF; --muted: rgba(255,255,255,0.42); --future-dot: #3A5080;
     }
-    html { scroll-behavior: smooth; }
     body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--white); min-height: 100vh; padding-bottom: 80px; }
-
     header { padding: 0 0 40px; max-width: 480px; margin: 0 auto; }
-    .hero-img {
-      width: 100%;
-      max-height: 340px;
-      object-fit: cover;
-      object-position: center top;
-      display: block;
-      margin-bottom: 28px;
-    }
+    .hero-img { width: 100%; max-height: 340px; object-fit: cover; object-position: center top; display: block; margin-bottom: 28px; }
     .header-text { padding: 0 28px; }
-    h1 { font-family: 'DM Serif Display', serif; font-size: 3.6rem; font-weight: 400; line-height: 0.95; color: var(--gold-light); letter-spacing: -1px; margin-bottom: 14px; }
+    h1 { font-family: 'DM Serif Display', serif; font-size: 3.6rem; font-weight: 400; line-height: 0.95; color: var(--gold-light); letter-spacing: -1px; margin-bottom: 14px; cursor: default; }
     .sub { font-size: 0.85rem; color: var(--muted); font-weight: 300; letter-spacing: 0.06em; display: flex; align-items: center; gap: 8px; }
     .paw { opacity: 0.7; }
-
     .road-divider { max-width: 480px; margin: 0 auto 36px; padding: 0 28px; }
     .road-divider-line { height: 1px; background: linear-gradient(to left, transparent, rgba(200,151,58,0.18), transparent); }
-
-    .road-wrap { max-width: 480px; margin: 0 auto; padding: 0 28px; position: relative; }
+    .road-wrap { max-width: 480px; margin: 0 auto; padding: 0 28px; }
     .road { position: relative; padding-right: 40px; }
     .road::before { content: ''; position: absolute; right: 13px; top: 12px; bottom: 12px; width: 2px; background: rgba(255,255,255,0.1); }
     .road-progress-line { position: absolute; right: 13px; top: 12px; width: 2px; background: linear-gradient(to bottom, var(--gold), var(--gold-light)); z-index: 1; transition: height 0.8s ease; }
-
     .stop { position: relative; padding-bottom: 10px; margin-bottom: 22px; }
-    .stop-dot { position: absolute; right: -40px; top: 10px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--future-dot); background: var(--bg); z-index: 2; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.3s, background 0.3s, box-shadow 0.3s; overflow: hidden; }
+    .stop-dot { position: absolute; right: -40px; top: 10px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--future-dot); background: var(--bg); z-index: 2; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; overflow: hidden; }
     .stop.done .stop-dot { border-color: var(--gold); background: var(--gold); }
     .stop.current .stop-dot { border-color: var(--gold-light); background: var(--gold); box-shadow: 0 0 0 5px var(--gold-pale); animation: pulse 2.4s ease-in-out infinite; }
     .stop.goal .stop-dot { border-color: var(--gold); background: var(--bg); }
@@ -53,70 +35,41 @@
     .stop.done .dot-inner, .stop.current .dot-inner { opacity: 1; }
     .stop-dot.has-photo { background-size: cover; background-position: center; border-color: var(--gold) !important; box-shadow: 0 0 0 2px var(--gold-pale); }
     .stop-dot.has-photo .dot-inner { display: none; }
-
     .stop-inline { display: flex; align-items: baseline; gap: 10px; padding: 10px 0 0; cursor: pointer; user-select: none; }
     .stop-inline-name { font-size: 0.88rem; font-weight: 500; color: var(--white); flex: 1; }
     .stop.future .stop-inline-name, .stop.goal .stop-inline-name { color: var(--muted); font-weight: 400; }
     .stop.goal .stop-inline-name { color: var(--gold-light); }
-    .stop-inline-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; letter-spacing: 0.04em; }
-
+    .stop-inline-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
     .stop-detail { overflow: hidden; max-height: 0; transition: max-height 0.35s ease, opacity 0.3s ease; opacity: 0; }
     .stop-detail.open { max-height: 500px; opacity: 1; }
     .stop-detail-inner { padding: 12px 0 14px; border-top: 1px solid var(--line); margin-top: 8px; }
     .detail-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-    .detail-chip { font-size: 0.74rem; color: var(--gold-light); background: var(--gold-pale); border-radius: 6px; padding: 3px 10px; letter-spacing: 0.03em; }
-    .detail-note { font-size: 0.8rem; color: var(--muted); font-style: italic; margin-bottom: 12px; line-height: 1.5; }
-
+    .detail-chip { font-size: 0.74rem; color: var(--gold-light); background: var(--gold-pale); border-radius: 6px; padding: 3px 10px; }
+    .detail-note { font-size: 0.8rem; color: var(--muted); font-style: italic; margin-bottom: 12px; }
     .photo-zone { border: 1px dashed rgba(200,151,58,0.3); border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 10px; cursor: pointer; }
     .photo-zone img { width: 100%; display: block; border-radius: 9px; }
     .photo-placeholder { padding: 14px; text-align: center; font-size: 0.78rem; color: var(--muted); }
     .photo-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-
-    .waze-btn { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(200,151,58,0.35); border-radius: 8px; padding: 9px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--gold-light); background: transparent; cursor: pointer; width: 100%; letter-spacing: 0.03em; transition: background 0.15s; }
+    .waze-btn { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(200,151,58,0.35); border-radius: 8px; padding: 9px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--gold-light); background: transparent; cursor: pointer; width: 100%; transition: background 0.15s; margin-bottom: 6px; }
     .waze-btn:active { background: var(--gold-pale); }
-    .del-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; opacity: 0.4; margin-top: 6px; display: block; padding: 2px; transition: opacity 0.2s; }
+    .del-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; opacity: 0.35; display: block; padding: 2px; transition: opacity 0.2s; }
     .del-btn:active { opacity: 0.9; }
-
-    .add-section { max-width: 480px; margin: 52px auto 0; padding: 0 28px; }
+    .add-section { max-width: 480px; margin: 40px auto 0; padding: 0 28px; }
     .add-label { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
     .add-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
     .field { margin-bottom: 12px; }
-    .field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.05em; }
+    .field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; }
     .field input { width: 100%; border: 1px solid rgba(255,255,255,0.12); border-radius: 9px; padding: 10px 13px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--white); background: rgba(255,255,255,0.05); outline: none; transition: border-color 0.2s; }
     .field input:focus { border-color: var(--gold); }
     .field input::placeholder { color: rgba(255,255,255,0.25); }
     .row2 { display: flex; gap: 10px; }
     .row2 .field { flex: 1; }
-    .add-btn { width: 100%; background: var(--gold); color: var(--bg); border: none; border-radius: 9px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.04em; margin-top: 4px; transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; gap: 4px; }
-    .add-btn:active { opacity: 0.85; }
-
+    .add-btn { width: 100%; background: var(--gold); color: var(--bg); border: none; border-radius: 9px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .sync-status { text-align: center; font-size: 0.72rem; color: var(--muted); margin-top: 10px; min-height: 18px; }
     .sync-status.ok { color: rgba(100,200,100,0.7); }
     .sync-status.err { color: rgba(200,100,100,0.7); }
-
-    /* NEXT TRIP */
-    .next-trip-section { margin-bottom: 28px; }
-    .nt-filter { margin-bottom: 14px; }
-    .nt-label { font-size: 0.72rem; color: var(--muted); display: block; margin-bottom: 8px; letter-spacing: 0.05em; }
-    .nt-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-    .nt-tab { background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: var(--muted); cursor: pointer; transition: all 0.2s; }
-    .nt-tab.active { background: var(--gold-pale); border-color: var(--gold); color: var(--gold-light); }
-    .nt-dest { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-    .nt-dest-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .nt-emoji { font-size: 1.3rem; }
-    .nt-name { font-size: 0.95rem; font-weight: 500; flex: 1; }
-    .nt-sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
-    .nt-arrival { font-size: 0.72rem; color: var(--gold-light); font-style: italic; margin-bottom: 10px; }
-    .nt-btns { display: flex; gap: 8px; }
-    .nt-btn { flex: 1; border-radius: 8px; padding: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s; }
-    .nt-btn.waze { background: rgba(46,204,250,0.15); color: #2ECCFA; border: 1px solid rgba(46,204,250,0.3); }
-    .nt-btn.invite { background: rgba(37,211,102,0.15); color: #25D366; border: 1px solid rgba(37,211,102,0.3); }
-    .nt-btn:active { opacity: 0.75; }
-    .nt-add { display: flex; gap: 8px; margin-top: 10px; }
-    .nt-add input { flex: 1; border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--white); background: rgba(255,255,255,0.05); outline: none; }
-    .nt-add input:focus { border-color: var(--gold); }
-    .nt-add input::placeholder { color: rgba(255,255,255,0.25); }
-    .nt-add-btn { background: var(--gold-pale); border: 1px solid var(--gold); border-radius: 9px; padding: 8px 14px; color: var(--gold-light); font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+    .admin-hint { max-width: 480px; margin: 0 auto; padding: 8px 28px 0; text-align: left; }
+    .admin-hint button { background: none; border: none; color: rgba(255,255,255,0.08); font-size: 0.7rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -127,7 +80,7 @@
     <h1 id="appTitle" onclick="handleTitleTap()">Wheely</h1>
     <p class="sub">
       בדרך להצלחה
-      <svg class="paw" width="18" height="18" viewBox="0 0 100 100" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <svg class="paw" width="18" height="18" viewBox="0 0 100 100" fill="white">
         <ellipse cx="50" cy="68" rx="22" ry="17"/>
         <ellipse cx="22" cy="44" rx="10" ry="13" transform="rotate(-15 22 44)"/>
         <ellipse cx="40" cy="34" rx="10" ry="13"/>
@@ -146,25 +99,7 @@
   </div>
 </div>
 
-
 <div class="add-section" id="adminSection" style="display:none">
-
-<!-- NEXT TRIP PLANNER -->
-<div class="next-trip-section" id="nextTripSection">
-  <div class="add-label">הנסיעה הבאה 🐾</div>
-  <div class="add-card">
-    <div class="nt-filter">
-      <span class="nt-label">ווילי מסוגל עד</span>
-      <div class="nt-tabs" id="ntTabs">
-        <button class="nt-tab active" onclick="setDuration(20)">20 דק׳</button>
-        <button class="nt-tab" onclick="setDuration(30)">30 דק׳</button>
-        <button class="nt-tab" onclick="setDuration(45)">45 דק׳</button>
-        <button class="nt-tab" onclick="setDuration(60)">שעה</button>
-      </div>
-    </div>
-    <div class="nt-list" id="ntList"></div>
-  </div>
-</div>
   <div class="add-label">הוספת נקודה</div>
   <div class="add-card">
     <div class="field"><label>יעד</label><input type="text" id="fDest" placeholder="לאן נסעתם?" /></div>
@@ -177,13 +112,11 @@
       <div class="field"><label>הערה</label><input type="text" id="fNote" placeholder="איך הלך?" /></div>
     </div>
     <button class="add-btn" onclick="addTrip()">
-      <svg width="36" height="22" viewBox="0 0 90 55" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;">
+      <svg width="36" height="22" viewBox="0 0 90 55" fill="none" style="display:inline-block;vertical-align:middle;">
         <ellipse cx="45" cy="28" rx="28" ry="16" fill="rgba(27,42,74,0.35)"/>
         <circle cx="74" cy="20" r="12" fill="rgba(27,42,74,0.35)"/>
         <ellipse cx="81" cy="12" rx="5" ry="7" fill="rgba(27,42,74,0.45)" transform="rotate(20 81 12)"/>
         <circle cx="79" cy="19" r="2" fill="white"/>
-        <ellipse cx="85" cy="22" rx="3" ry="2" fill="rgba(27,42,74,0.6)"/>
-        <path d="M17 24 Q6 14 10 8" stroke="rgba(27,42,74,0.4)" stroke-width="4" stroke-linecap="round" fill="none"/>
         <circle cx="30" cy="44" r="9" fill="rgba(27,42,74,0.45)"/>
         <circle cx="30" cy="44" r="4" fill="rgba(255,255,255,0.3)"/>
         <circle cx="60" cy="44" r="9" fill="rgba(27,42,74,0.45)"/>
@@ -195,44 +128,27 @@
   </div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyBoZM1dcSqTPjwK0oF4BHwhXAUCd8ryJIw",
   authDomain: "wheely-7b0b8.firebaseapp.com",
   projectId: "wheely-7b0b8",
   storageBucket: "wheely-7b0b8.firebasestorage.app",
   messagingSenderId: "405903225497",
   appId: "1:405903225497:web:8066c2813a9627bf00fe08"
-};
-
-const app = initializeApp(firebaseConfig);
+});
 const db = getFirestore(app);
 
-const SEED = [
-  { name: 'פלורנטין',            type: 'done',    date: '31.05.24', minutes: 8,  km: null, note: 'אצל יעלי',          order: 1 },
-  { name: 'פארק הירקון – מערב',  type: 'done',    date: '26.05.24', minutes: 15, km: 4,   note: '',                   order: 2 },
-  { name: 'בריכת חורף רמת אביב', type: 'done',    date: '27.05.24', minutes: 20, km: 3,   note: '',                   order: 3 },
-  { name: 'בריכת חורף רמת אביב', type: 'current', date: '10.06.24', minutes: 20, km: 3,   note: 'שיא! 20 דקות 🎉',   order: 4 },
-  { name: 'נסיעה של 30 דקות',    type: 'future',  date: '',         minutes: 30, km: null, note: 'רמת גן, גבעתיים',   order: 5 },
-  { name: 'נסיעה של 45 דקות',    type: 'future',  date: '',         minutes: 45, km: null, note: 'פתח תקווה',          order: 6 },
-  { name: 'נסיעה של שעה',        type: 'future',  date: '',         minutes: 60, km: null, note: 'נתניה, קיסריה',      order: 7 },
-  { name: 'חיפה',                type: 'future',  date: '',         minutes: 90, km: null, note: '',                   order: 8 },
-  { name: '🏔️ מעיין ברוך',       type: 'goal',    date: '',         minutes: 190,km: null, note: 'היעד הצפוני',        order: 9 },
-  { name: '🏖️ אילת',             type: 'goal',    date: '',         minutes: 460,km: null, note: 'היעד הדרומי',        order: 10 },
-];
-
+let allStops = [];
 let isAdmin = false;
 let tapCount = 0;
-let tapTimer = null;
 
 window.handleTitleTap = function() {
   tapCount++;
-  clearTimeout(tapTimer);
-  tapTimer = setTimeout(() => tapCount = 0, 2000);
+  setTimeout(() => tapCount = 0, 2000);
   if (tapCount >= 5) {
     tapCount = 0;
     if (isAdmin) {
@@ -245,137 +161,12 @@ window.handleTitleTap = function() {
         isAdmin = true;
         document.getElementById('adminSection').style.display = 'block';
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-        renderNextTrip();
         render();
-      } else if (pw !== null) {
-        alert('סיסמה שגויה');
-      }
+      } else if (pw !== null) alert('סיסמה שגויה');
     }
   }
 }
 
-// ── DESTINATIONS ──────────────────────────────────────────────────────────────
-let destinations = JSON.parse(localStorage.getItem('wheely_dests') || 'null') || [
-  { emoji: '🌳', name: 'פארק הירקון', address: 'פארק הירקון, תל אביב', minutes: 15, type: 'park', person: '' },
-  { emoji: '🐕', name: 'פארק כלבים תל ברוך', address: 'תל ברוך צפון, תל אביב', minutes: 20, type: 'park', person: '' },
-  { emoji: '🏖️', name: 'חוף כלבים הרצליה', address: 'חוף כלבים הרצליה', minutes: 25, type: 'beach', person: '' },
-  { emoji: '🌾', name: 'שדה פתוח הרצליה', address: 'פארק הסביבתי הרצליה', minutes: 20, type: 'field', person: '' },
-  { emoji: '🏠', name: 'רמת השרון', address: 'רמת השרון', minutes: 20, type: 'family', person: 'משפחה' },
-];
-function saveDests() { localStorage.setItem('wheely_dests', JSON.stringify(destinations)); }
-
-let currentDuration = 20;
-window.setDuration = function(d) {
-  currentDuration = d;
-  document.querySelectorAll('.nt-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  renderNextTrip();
-}
-
-function kmEstimate(minutes) { return Math.round(minutes * 0.7); }
-
-function arrivalText(dest) {
-  const maxKm = Math.max(...(allStops.filter(s=>s.type==='done'||s.type==='current').map(s=>s.km||0)), 0);
-  const targetKm = kmEstimate(dest.minutes);
-  if (maxKm >= targetKm) return '✅ ווילי מוכן עכשיו!';
-  const remaining = targetKm - maxKm;
-  const weeksLeft = Math.ceil(remaining / 2);
-  const date = new Date();
-  date.setDate(date.getDate() + weeksLeft * 7);
-  const d = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
-  return `🐾 ווילי יגיע בסביבות ${d}`;
-}
-
-function renderNextTrip() {
-  const list = document.getElementById('ntList');
-  if (!list) return;
-  const filtered = destinations.filter(d => d.minutes <= currentDuration);
-  if (!filtered.length) { list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">אין יעדים מתאימים — נסי משך ארוך יותר</div>'; return; }
-
-  list.innerHTML = filtered.map((d, i) => `
-    <div class="nt-dest">
-      <div class="nt-dest-top">
-        <span class="nt-emoji">${d.emoji}</span>
-        <span class="nt-name">${d.name}${d.person ? ` <span style="color:var(--muted);font-size:0.78rem">· ${d.person}</span>` : ''}</span>
-        ${isAdmin ? `<button onclick="deleteDest(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">🗑</button>` : ''}
-      </div>
-      <div class="nt-sub">~${d.minutes} דק׳ נסיעה · ${kmEstimate(d.minutes)} ק"מ</div>
-      <div class="nt-arrival">${arrivalText(d)}</div>
-      <div class="nt-btns">
-        <button class="nt-btn waze" onclick="waze('${encodeURIComponent(d.address)}')">Waze ↗</button>
-        <button class="nt-btn invite" onclick="sendInvite('${d.name}','${d.person||''}','${d.address}')">📲 הזמן</button>
-      </div>
-    </div>
-  `).join('');
-
-  // add new destination form
-  list.innerHTML += `
-    <div class="nt-add">
-      <input type="text" id="ntEmoji" placeholder="🏠" style="max-width:52px;text-align:center;" />
-      <input type="text" id="ntName" placeholder="שם המקום / שם איש" />
-      <input type="text" id="ntAddr" placeholder="כתובת" />
-      <input type="number" id="ntMin" placeholder="דק'" style="max-width:58px;" />
-      <button class="nt-add-btn" onclick="addDest()">+ הוסף</button>
-    </div>
-  `;
-}
-
-window.addDest = function() {
-  const emoji = document.getElementById('ntEmoji').value.trim() || '📍';
-  const name  = document.getElementById('ntName').value.trim();
-  const addr  = document.getElementById('ntAddr').value.trim();
-  const mins  = parseInt(document.getElementById('ntMin').value) || 20;
-  if (!name) return;
-  destinations.push({ emoji, name, address: addr||name, minutes: mins, type: 'custom', person: '' });
-  saveDests();
-  renderNextTrip();
-}
-
-window.deleteDest = function(i) {
-  if (!confirm('למחוק?')) return;
-  destinations.splice(i, 1);
-  saveDests();
-  renderNextTrip();
-}
-
-window.sendInvite = function(name, person, addr) {
-  // Step 1: open Waze to get distance
-  window.open(`https://waze.com/ul?q=${encodeURIComponent(addr)}&navigate=yes`, '_blank');
-  // Step 2: ask user to enter distance they saw in Waze
-  setTimeout(() => {
-    const km = parseFloat(prompt(`כמה ק"מ הציג Waze עד ${name}?`));
-    if (!km || isNaN(km)) return;
-    const maxKm = Math.max(...(allStops.filter(s=>s.type==='done'||s.type==='current').map(s=>s.km||0)), 1);
-    // Willy progresses ~2km per week
-    const weeksLeft = Math.ceil(Math.max(0, km - maxKm) / 2);
-    let msg;
-    if (weeksLeft <= 0) {
-      msg = `היי${person ? ' ' + person : ''}! 🐾🚗\nווילי מוכן לבוא אליך ל${name}!\nמתי מתאים? נתאם!\n\n(עוקבים אחרי המסע שלו כאן: https://mycd1974-gif.github.io/Wheely)`;
-    } else {
-      const date = new Date();
-      date.setDate(date.getDate() + weeksLeft * 7);
-      const d = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
-      msg = `היי${person ? ' ' + person : ''}! 🐾🚗\nווילי בדרך אליך ל${name}!\n\nלפי הקצב שלו (${maxKm} ק"מ היום, ${km} ק"מ אליך) —\nנגיע בסביבות ${d} 😄\n\nעוקבים אחרי המסע:\nhttps://mycd1974-gif.github.io/Wheely`;
-    }
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-  }, 3000);
-}
-
-async function seedIfEmpty() {
-  const snap = await getDocs(collection(db, 'stops'));
-  if (snap.empty) {
-    for (const s of SEED) {
-      await addDoc(collection(db, 'stops'), { ...s, photo: null, createdAt: s.order });
-    }
-  }
-}
-seedIfEmpty();
-
-function fmtDate(d) {
-  if (!d || !d.includes('-')) return d || '';
-  const [y,m,dd] = d.split('-');
-  return `${dd}.${m}.${y.slice(2)}`;
-}
 function metaStr(s) {
   const parts = [];
   if (s.date) parts.push(s.date);
@@ -387,13 +178,11 @@ function metaStr(s) {
 function render() {
   const road = document.getElementById('road');
   road.querySelectorAll('.stop').forEach(el => el.remove());
-
   const typeOrder = { done: 0, current: 0, future: 1, goal: 2 };
   const sorted = [...allStops].sort((a,b) => {
     if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
     return (a.order||0) - (b.order||0);
   });
-
   sorted.forEach(s => {
     const el = document.createElement('div');
     el.className = `stop ${s.type}`;
@@ -413,16 +202,14 @@ function render() {
           ${s.note ? `<div class="detail-note">${s.note}</div>` : ''}
           ${meta ? `<div class="detail-row"><span class="detail-chip">${meta}</span></div>` : ''}
           ${canEdit ? `
-            ${isAdmin ? `
             <div class="photo-zone" id="pz-${s.fbId}">
-              ${s.photo
-                ? `<img src="${s.photo}" alt="תמונה" />`
-                : `<div class="photo-placeholder">📷 הוסף תמונה</div>
-                   <input type="file" accept="image/*" onchange="addPhoto('${s.fbId}','${s.fbId}',this)" />`
-              }
-            </div>` : s.photo ? `<div class="photo-zone"><img src="${s.photo}" alt="תמונה" /></div>` : ''}
+              ${s.photo ? `<img src="${s.photo}" alt="תמונה" />`
+                : isAdmin ? `<div class="photo-placeholder">📷 הוסף תמונה</div>
+                   <input type="file" accept="image/*" onchange="addPhoto('${s.fbId}',this)" />`
+                : ''}
+            </div>
             <button class="waze-btn" onclick="waze('${encodeURIComponent(s.name)}')">נווט ב-Waze ↗</button>
-            ${isAdmin ? `<button class="del-btn" onclick="deleteTrip('${s.fbId}')">🗑</button>` : ''}
+            ${isAdmin ? `<button class="del-btn" onclick="deleteTrip('${s.fbId}')">🗑 מחק</button>` : ''}
           ` : ''}
         </div>
       </div>
@@ -432,63 +219,51 @@ function render() {
   updateProgressLine();
 }
 
-function toggleStop(id) {
-  const detail = document.getElementById('detail-' + id);
-  if (detail) detail.classList.toggle('open');
+window.toggleStop = function(id) {
+  const d = document.getElementById('detail-' + id);
+  if (d) d.classList.toggle('open');
   setTimeout(updateProgressLine, 360);
 }
-window.toggleStop = toggleStop;
 
 function updateProgressLine() {
   const stops = document.querySelectorAll('.stop.done, .stop.current');
   if (!stops.length) return;
-  const last = stops[stops.length - 1];
+  const last = stops[stops.length-1];
   const roadEl = document.getElementById('road');
   const dotEl = last.querySelector('.stop-dot');
   const h = (dotEl.getBoundingClientRect().top + 10) - roadEl.getBoundingClientRect().top;
-  document.getElementById('progressLine').style.height = Math.max(0, h) + 'px';
+  document.getElementById('progressLine').style.height = Math.max(0,h) + 'px';
 }
 
-// ── FIRESTORE REALTIME ────────────────────────────────────────────────────────
-const q = query(collection(db, 'stops'), orderBy('createdAt', 'asc'));
-onSnapshot(q, snapshot => {
-  allStops = snapshot.docs.map(d => ({ fbId: d.id, ...d.data() }));
+// Listen to stops collection
+onSnapshot(query(collection(db,'stops'), orderBy('createdAt','asc')), snap => {
+  allStops = snap.docs.map(d => ({ fbId: d.id, ...d.data() }));
   render();
+}, err => {
+  console.error('Firebase error:', err);
 });
 
-// ── ADD TRIP ──────────────────────────────────────────────────────────────────
 window.addTrip = async function() {
-  const dest    = document.getElementById('fDest').value.trim();
-  const date    = document.getElementById('fDate').value;
+  const dest = document.getElementById('fDest').value.trim();
+  const date = document.getElementById('fDate').value;
   const minutes = parseInt(document.getElementById('fMin').value) || 0;
-  const km      = parseFloat(document.getElementById('fKm').value) || null;
-  const note    = document.getElementById('fNote').value.trim();
+  const km = parseFloat(document.getElementById('fKm').value) || null;
+  const note = document.getElementById('fNote').value.trim();
   if (!dest || !date) { alert('נא למלא יעד ותאריך'); return; }
-
   const status = document.getElementById('syncStatus');
   status.textContent = 'שומר...';
-  status.className = 'sync-status';
-
   try {
-    const maxOrder = allStops.filter(s=>s.type==='done'||s.type==='current').reduce((m,s)=>Math.max(m,s.order||0),0);
-    await addDoc(collection(db, 'stops'), {
-      name: dest, date, minutes, km, note, photo: null,
-      type: 'done', order: maxOrder + 1,
-      createdAt: Date.now()
-    });
-    status.textContent = '✓ נשמר ומשותף';
+    const maxOrder = allStops.reduce((m,s) => Math.max(m, s.order||0), 0);
+    await addDoc(collection(db,'stops'), { name:dest, date, minutes, km, note, photo:null, type:'done', order:maxOrder+1, createdAt:Date.now() });
+    status.textContent = '✓ נשמר';
     status.className = 'sync-status ok';
-    ['fDest','fMin','fKm','fNote'].forEach(id => document.getElementById(id).value = '');
+    ['fDest','fMin','fKm','fNote'].forEach(id => document.getElementById(id).value='');
     document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-    setTimeout(() => status.textContent = '', 3000);
-  } catch(e) {
-    status.textContent = 'שגיאה בשמירה';
-    status.className = 'sync-status err';
-  }
+    setTimeout(() => status.textContent='', 3000);
+  } catch(e) { status.textContent='שגיאה'; status.className='sync-status err'; }
 }
 
-// ── ADD PHOTO ─────────────────────────────────────────────────────────────────
-window.addPhoto = function(fbId, localId, input) {
+window.addPhoto = function(fbId, input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
@@ -497,39 +272,28 @@ window.addPhoto = function(fbId, localId, input) {
       const canvas = document.createElement('canvas');
       const MAX = 500;
       let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
-      else       { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const base64 = canvas.toDataURL('image/jpeg', 0.6);
-      const pz = document.getElementById('pz-' + localId);
+      if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w=MAX; } }
+      else { if (h > MAX) { w = Math.round(w*MAX/h); h=MAX; } }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const base64 = canvas.toDataURL('image/jpeg',0.6);
+      const pz = document.getElementById('pz-'+fbId);
       if (pz) pz.innerHTML = `<img src="${base64}" alt="תמונה" />`;
-      if (fbId) {
-        try {
-          await updateDoc(doc(db, 'stops', fbId), { photo: base64 });
-        } catch(err) {
-          alert('שגיאה: ' + err.code + '\n' + err.message);
-        }
-      }
+      try { await updateDoc(doc(db,'stops',fbId), {photo:base64}); }
+      catch(err) { alert('שגיאה: '+err.message); }
     };
-    img.onerror = () => alert('שגיאה בטעינת תמונה');
     img.src = e.target.result;
   };
-  reader.onerror = () => alert('שגיאה בקריאת קובץ');
   reader.readAsDataURL(file);
 }
 
-window.waze = function(dest) { window.open(`https://waze.com/ul?q=${dest}&navigate=yes`, '_blank'); }
-
 window.deleteTrip = async function(fbId) {
-  if (!fbId) return;
   if (!confirm('למחוק?')) return;
-  try {
-    await deleteDoc(doc(db, 'stops', fbId));
-  } catch(err) { alert('שגיאה: ' + err.message); }
+  try { await deleteDoc(doc(db,'stops',fbId)); }
+  catch(err) { alert('שגיאה: '+err.message); }
 }
 
-document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+window.waze = dest => window.open(`https://waze.com/ul?q=${dest}&navigate=yes`,'_blank');
 window.addEventListener('resize', updateProgressLine);
 </script>
 </body>
