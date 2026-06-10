@@ -198,7 +198,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBoZM1dcSqTPjwK0oF4BHwhXAUCd8ryJIw",
@@ -362,7 +362,6 @@ window.sendInvite = function(name, person, addr) {
 }
 
 async function seedIfEmpty() {
-  const { getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   const snap = await getDocs(collection(db, 'stops'));
   if (snap.empty) {
     for (const s of SEED) {
@@ -526,7 +525,6 @@ window.deleteTrip = async function(fbId) {
   if (!fbId) return;
   if (!confirm('למחוק?')) return;
   try {
-    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     await deleteDoc(doc(db, 'stops', fbId));
   } catch(err) { alert('שגיאה: ' + err.message); }
 }
