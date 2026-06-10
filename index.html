@@ -122,7 +122,12 @@
   </div>
 </div>
 
-<div class="add-section">
+<!-- lock button -->
+<div style="max-width:480px;margin:36px auto 0;padding:0 28px;text-align:left;">
+  <button onclick="toggleAdmin()" id="lockBtn" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:1.2rem;cursor:pointer;">🔒</button>
+</div>
+
+<div class="add-section" id="adminSection" style="display:none">
   <div class="add-label">הוספת נקודה</div>
   <div class="add-card">
     <div class="field"><label>יעד</label><input type="text" id="fDest" placeholder="לאן נסעתם?" /></div>
@@ -170,30 +175,62 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const MILESTONES = [
-  { id: 'm1',  name: 'פלורנטין',              type: 'done',    date: '31.05.24', minutes: 8,  km: null, note: 'אצל יעלי' },
-  { id: 'm2',  name: 'פארק הירקון – מערב',    type: 'done',    date: '26.05.24', minutes: 15, km: 4,   note: '' },
-  { id: 'm3',  name: 'בריכת חורף רמת אביב',   type: 'done',    date: '27.05.24', minutes: 20, km: 3,   note: '' },
-  { id: 'm3b', name: 'בריכת חורף רמת אביב',   type: 'current', date: '10.06.24', minutes: 20, km: 3,   note: 'שיא! 20 דקות 🎉' },
-  { id: 'm4',  name: 'נסיעה של 30 דקות',       type: 'future',  note: 'רמת גן, גבעתיים' },
-  { id: 'm5',  name: 'נסיעה של 45 דקות',       type: 'future',  note: 'פתח תקווה' },
-  { id: 'm6',  name: 'נסיעה של שעה',           type: 'future',  note: 'נתניה, קיסריה' },
-  { id: 'm7',  name: 'חיפה',                   type: 'future',  note: '' },
-  { id: 'm8',  name: '🏔️ מעיין ברוך',          type: 'goal',    note: 'היעד הצפוני' },
-  { id: 'm9',  name: '🏖️ אילת',               type: 'goal',    note: 'היעד הדרומי' },
+const SEED = [
+  { name: 'פלורנטין',            type: 'done',    date: '31.05.24', minutes: 8,  km: null, note: 'אצל יעלי',          order: 1 },
+  { name: 'פארק הירקון – מערב',  type: 'done',    date: '26.05.24', minutes: 15, km: 4,   note: '',                   order: 2 },
+  { name: 'בריכת חורף רמת אביב', type: 'done',    date: '27.05.24', minutes: 20, km: 3,   note: '',                   order: 3 },
+  { name: 'בריכת חורף רמת אביב', type: 'current', date: '10.06.24', minutes: 20, km: 3,   note: 'שיא! 20 דקות 🎉',   order: 4 },
+  { name: 'נסיעה של 30 דקות',    type: 'future',  date: '',         minutes: 30, km: null, note: 'רמת גן, גבעתיים',   order: 5 },
+  { name: 'נסיעה של 45 דקות',    type: 'future',  date: '',         minutes: 45, km: null, note: 'פתח תקווה',          order: 6 },
+  { name: 'נסיעה של שעה',        type: 'future',  date: '',         minutes: 60, km: null, note: 'נתניה, קיסריה',      order: 7 },
+  { name: 'חיפה',                type: 'future',  date: '',         minutes: 90, km: null, note: '',                   order: 8 },
+  { name: '🏔️ מעיין ברוך',       type: 'goal',    date: '',         minutes: 190,km: null, note: 'היעד הצפוני',        order: 9 },
+  { name: '🏖️ אילת',             type: 'goal',    date: '',         minutes: 460,km: null, note: 'היעד הדרומי',        order: 10 },
 ];
 
-let userTrips = [];
+let isAdmin = false;
 
-function fmtDate(iso) {
-  const [y,m,d] = iso.split('-');
-  return `${d}.${m}.${y.slice(2)}`;
+window.toggleAdmin = function() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.getElementById('adminSection').style.display = 'none';
+    document.getElementById('lockBtn').textContent = '🔒';
+    render();
+  } else {
+    const pw = prompt('סיסמה:');
+    if (pw === '1974') {
+      isAdmin = true;
+      document.getElementById('adminSection').style.display = 'block';
+      document.getElementById('lockBtn').textContent = '🔓';
+      document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+      render();
+    } else if (pw !== null) {
+      alert('סיסמה שגויה');
+    }
+  }
+}
+
+async function seedIfEmpty() {
+  const { getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const snap = await getDocs(collection(db, 'stops'));
+  if (snap.empty) {
+    for (const s of SEED) {
+      await addDoc(collection(db, 'stops'), { ...s, photo: null, createdAt: s.order });
+    }
+  }
+}
+seedIfEmpty();
+
+function fmtDate(d) {
+  if (!d || !d.includes('-')) return d || '';
+  const [y,m,dd] = d.split('-');
+  return `${dd}.${m}.${y.slice(2)}`;
 }
 function metaStr(s) {
   const parts = [];
-  if (s.date)    parts.push(s.date);
-  if (s.minutes) parts.push(`${s.minutes} דק׳`);
-  if (s.km)      parts.push(`${s.km} ק״מ`);
+  if (s.date) parts.push(s.date);
+  if (s.minutes && (s.type==='done'||s.type==='current')) parts.push(`${s.minutes} דק׳`);
+  if (s.km) parts.push(`${s.km} ק״מ`);
   return parts.join(' · ');
 }
 
@@ -201,46 +238,41 @@ function render() {
   const road = document.getElementById('road');
   road.querySelectorAll('.stop').forEach(el => el.remove());
 
-  const userStops = userTrips.map(t => ({
-    id: t.fbId, fbId: t.fbId, name: t.dest, type: 'done',
-    date: fmtDate(t.date), minutes: t.minutes, km: t.km || null,
-    note: t.note, photo: t.photo, user: true
-  }));
-
-  const order = { done: 0, current: 0, future: 1, goal: 2 };
-  const all = [...MILESTONES, ...userStops].sort((a,b) => {
-    if (order[a.type] !== order[b.type]) return order[a.type] - order[b.type];
-    return (a.minutes||999) - (b.minutes||999);
+  const typeOrder = { done: 0, current: 0, future: 1, goal: 2 };
+  const sorted = [...allStops].sort((a,b) => {
+    if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
+    return (a.order||0) - (b.order||0);
   });
 
-  all.forEach(s => {
+  sorted.forEach(s => {
     const el = document.createElement('div');
     el.className = `stop ${s.type}`;
-    el.dataset.id = s.id;
     const meta = metaStr(s);
+    const canEdit = s.type === 'done' || s.type === 'current';
     el.innerHTML = `
-      <div class="stop-dot ${s.photo ? 'has-photo' : ''}" onclick="toggleStop('${s.id}')"
+      <div class="stop-dot ${s.photo ? 'has-photo' : ''}" onclick="toggleStop('${s.fbId}')"
         ${s.photo ? `style="background-image:url('${s.photo}')"` : ''}>
         <div class="dot-inner"></div>
       </div>
-      <div class="stop-inline" onclick="toggleStop('${s.id}')">
+      <div class="stop-inline" onclick="toggleStop('${s.fbId}')">
         <span class="stop-inline-name">${s.name}</span>
         ${meta ? `<span class="stop-inline-meta">${meta}</span>` : ''}
       </div>
-      <div class="stop-detail" id="detail-${s.id}">
+      <div class="stop-detail" id="detail-${s.fbId}">
         <div class="stop-detail-inner">
           ${s.note ? `<div class="detail-note">${s.note}</div>` : ''}
           ${meta ? `<div class="detail-row"><span class="detail-chip">${meta}</span></div>` : ''}
-          ${(s.type === 'done' || s.type === 'current') ? `
-            <div class="photo-zone" id="pz-${s.id}">
+          ${canEdit ? `
+            ${isAdmin ? `
+            <div class="photo-zone" id="pz-${s.fbId}">
               ${s.photo
                 ? `<img src="${s.photo}" alt="תמונה" />`
                 : `<div class="photo-placeholder">📷 הוסף תמונה</div>
-                   <input type="file" accept="image/*" onchange="addPhoto('${s.fbId||''}','${s.id}',this)" />`
+                   <input type="file" accept="image/*" onchange="addPhoto('${s.fbId}','${s.fbId}',this)" />`
               }
-            </div>
+            </div>` : s.photo ? `<div class="photo-zone"><img src="${s.photo}" alt="תמונה" /></div>` : ''}
             <button class="waze-btn" onclick="waze('${encodeURIComponent(s.name)}')">נווט ב-Waze ↗</button>
-            ${s.fbId ? `<button class="del-btn" onclick="deleteTrip('${s.fbId}')">🗑</button>` : ''}
+            ${isAdmin ? `<button class="del-btn" onclick="deleteTrip('${s.fbId}')">🗑</button>` : ''}
           ` : ''}
         </div>
       </div>
@@ -268,9 +300,9 @@ function updateProgressLine() {
 }
 
 // ── FIRESTORE REALTIME ────────────────────────────────────────────────────────
-const q = query(collection(db, 'trips'), orderBy('createdAt', 'asc'));
+const q = query(collection(db, 'stops'), orderBy('createdAt', 'asc'));
 onSnapshot(q, snapshot => {
-  userTrips = snapshot.docs.map(doc => ({ fbId: doc.id, ...doc.data() }));
+  allStops = snapshot.docs.map(d => ({ fbId: d.id, ...d.data() }));
   render();
 });
 
@@ -288,8 +320,10 @@ window.addTrip = async function() {
   status.className = 'sync-status';
 
   try {
-    await addDoc(collection(db, 'trips'), {
-      dest, date, minutes, km, note, photo: null,
+    const maxOrder = allStops.filter(s=>s.type==='done'||s.type==='current').reduce((m,s)=>Math.max(m,s.order||0),0);
+    await addDoc(collection(db, 'stops'), {
+      name: dest, date, minutes, km, note, photo: null,
+      type: 'done', order: maxOrder + 1,
       createdAt: Date.now()
     });
     status.textContent = '✓ נשמר ומשותף';
@@ -322,13 +356,10 @@ window.addPhoto = function(fbId, localId, input) {
       if (pz) pz.innerHTML = `<img src="${base64}" alt="תמונה" />`;
       if (fbId) {
         try {
-          await updateDoc(doc(db, 'trips', fbId), { photo: base64 });
-          alert('✓ תמונה נשמרה!');
+          await updateDoc(doc(db, 'stops', fbId), { photo: base64 });
         } catch(err) {
           alert('שגיאה: ' + err.code + '\n' + err.message);
         }
-      } else {
-        alert('שגיאה: הנסיעה לא שמורה ב-Firebase');
       }
     };
     img.onerror = () => alert('שגיאה בטעינת תמונה');
@@ -342,10 +373,10 @@ window.waze = function(dest) { window.open(`https://waze.com/ul?q=${dest}&naviga
 
 window.deleteTrip = async function(fbId) {
   if (!fbId) return;
-  if (!confirm('למחוק את הנסיעה?')) return;
+  if (!confirm('למחוק?')) return;
   try {
     const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await deleteDoc(doc(db, 'trips', fbId));
+    await deleteDoc(doc(db, 'stops', fbId));
   } catch(err) { alert('שגיאה: ' + err.message); }
 }
 
