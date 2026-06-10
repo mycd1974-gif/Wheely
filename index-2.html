@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wheely</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #1B2A4A;
+      --surface:   rgba(255,255,255,0.06);
+      --line:      rgba(255,255,255,0.12);
+      --gold:      #C8973A;
+      --gold-light:#E8B96A;
+      --gold-pale: rgba(200,151,58,0.15);
+      --white:     #FFFFFF;
+      --muted:     rgba(255,255,255,0.42);
+      --future-dot:#3A5080;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--white); min-height: 100vh; padding-bottom: 80px; }
+
+    header { padding: 64px 28px 56px; max-width: 480px; margin: 0 auto; }
+    h1 { font-family: 'DM Serif Display', serif; font-size: 3.6rem; font-weight: 400; line-height: 0.95; color: var(--gold-light); letter-spacing: -1px; margin-bottom: 14px; }
+    .sub { font-size: 0.85rem; color: var(--muted); font-weight: 300; letter-spacing: 0.06em; display: flex; align-items: center; gap: 8px; }
+    .paw { opacity: 0.7; }
+
+    .road-divider { max-width: 480px; margin: 0 auto 36px; padding: 0 28px; }
+    .road-divider-line { height: 1px; background: linear-gradient(to left, transparent, rgba(200,151,58,0.18), transparent); }
+
+    .road-wrap { max-width: 480px; margin: 0 auto; padding: 0 28px; position: relative; }
+    .road { position: relative; padding-right: 40px; }
+    .road::before { content: ''; position: absolute; right: 13px; top: 12px; bottom: 12px; width: 2px; background: rgba(255,255,255,0.1); }
+    .road-progress-line { position: absolute; right: 13px; top: 12px; width: 2px; background: linear-gradient(to bottom, var(--gold), var(--gold-light)); z-index: 1; transition: height 0.8s ease; }
+
+    .stop { position: relative; padding-bottom: 10px; margin-bottom: 22px; }
+    .stop-dot { position: absolute; right: -40px; top: 10px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--future-dot); background: var(--bg); z-index: 2; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.3s, background 0.3s, box-shadow 0.3s; overflow: hidden; }
+    .stop.done .stop-dot { border-color: var(--gold); background: var(--gold); }
+    .stop.current .stop-dot { border-color: var(--gold-light); background: var(--gold); box-shadow: 0 0 0 5px var(--gold-pale); animation: pulse 2.4s ease-in-out infinite; }
+    .stop.goal .stop-dot { border-color: var(--gold); background: var(--bg); }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 4px var(--gold-pale)}50%{box-shadow:0 0 0 8px rgba(200,151,58,0.08)}}
+    .dot-inner { width: 7px; height: 7px; border-radius: 50%; background: white; opacity: 0; }
+    .stop.done .dot-inner, .stop.current .dot-inner { opacity: 1; }
+    .stop-dot.has-photo { background-size: cover; background-position: center; border-color: var(--gold) !important; box-shadow: 0 0 0 2px var(--gold-pale); }
+    .stop-dot.has-photo .dot-inner { display: none; }
+
+    .stop-inline { display: flex; align-items: baseline; gap: 10px; padding: 10px 0 0; cursor: pointer; user-select: none; }
+    .stop-inline-name { font-size: 0.88rem; font-weight: 500; color: var(--white); flex: 1; }
+    .stop.future .stop-inline-name, .stop.goal .stop-inline-name { color: var(--muted); font-weight: 400; }
+    .stop.goal .stop-inline-name { color: var(--gold-light); }
+    .stop-inline-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; letter-spacing: 0.04em; }
+
+    .stop-detail { overflow: hidden; max-height: 0; transition: max-height 0.35s ease, opacity 0.3s ease; opacity: 0; }
+    .stop-detail.open { max-height: 500px; opacity: 1; }
+    .stop-detail-inner { padding: 12px 0 14px; border-top: 1px solid var(--line); margin-top: 8px; }
+    .detail-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .detail-chip { font-size: 0.74rem; color: var(--gold-light); background: var(--gold-pale); border-radius: 6px; padding: 3px 10px; letter-spacing: 0.03em; }
+    .detail-note { font-size: 0.8rem; color: var(--muted); font-style: italic; margin-bottom: 12px; line-height: 1.5; }
+
+    .photo-zone { border: 1px dashed rgba(200,151,58,0.3); border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 10px; cursor: pointer; }
+    .photo-zone img { width: 100%; display: block; border-radius: 9px; }
+    .photo-placeholder { padding: 14px; text-align: center; font-size: 0.78rem; color: var(--muted); }
+    .photo-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    .waze-btn { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(200,151,58,0.35); border-radius: 8px; padding: 9px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--gold-light); background: transparent; cursor: pointer; width: 100%; letter-spacing: 0.03em; transition: background 0.15s; }
+    .waze-btn:active { background: var(--gold-pale); }
+
+    .add-section { max-width: 480px; margin: 52px auto 0; padding: 0 28px; }
+    .add-label { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .add-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.05em; }
+    .field input { width: 100%; border: 1px solid rgba(255,255,255,0.12); border-radius: 9px; padding: 10px 13px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--white); background: rgba(255,255,255,0.05); outline: none; transition: border-color 0.2s; }
+    .field input:focus { border-color: var(--gold); }
+    .field input::placeholder { color: rgba(255,255,255,0.25); }
+    .row2 { display: flex; gap: 10px; }
+    .row2 .field { flex: 1; }
+    .add-btn { width: 100%; background: var(--gold); color: var(--bg); border: none; border-radius: 9px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.04em; margin-top: 4px; transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .add-btn:active { opacity: 0.85; }
+
+    .sync-status { text-align: center; font-size: 0.72rem; color: var(--muted); margin-top: 10px; min-height: 18px; }
+    .sync-status.ok { color: rgba(100,200,100,0.7); }
+    .sync-status.err { color: rgba(200,100,100,0.7); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Wheely</h1>
+  <p class="sub">
+    בדרך להצלחה
+    <svg class="paw" width="18" height="18" viewBox="0 0 100 100" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="68" rx="22" ry="17"/>
+      <ellipse cx="22" cy="44" rx="10" ry="13" transform="rotate(-15 22 44)"/>
+      <ellipse cx="40" cy="34" rx="10" ry="13"/>
+      <ellipse cx="60" cy="34" rx="10" ry="13"/>
+      <ellipse cx="78" cy="44" rx="10" ry="13" transform="rotate(15 78 44)"/>
+    </svg>
+  </p>
+</header>
+
+<div class="road-divider"><div class="road-divider-line"></div></div>
+
+<div class="road-wrap">
+  <div class="road" id="road">
+    <div class="road-progress-line" id="progressLine"></div>
+  </div>
+</div>
+
+<div class="add-section">
+  <div class="add-label">הוספת נקודה</div>
+  <div class="add-card">
+    <div class="field"><label>יעד</label><input type="text" id="fDest" placeholder="לאן נסעתם?" /></div>
+    <div class="row2">
+      <div class="field"><label>תאריך</label><input type="date" id="fDate" /></div>
+      <div class="field"><label>דקות</label><input type="number" id="fMin" placeholder="20" min="1" /></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ק"מ</label><input type="number" id="fKm" placeholder="5" min="0" step="0.5" /></div>
+      <div class="field"><label>הערה</label><input type="text" id="fNote" placeholder="איך הלך?" /></div>
+    </div>
+    <button class="add-btn" onclick="addTrip()">
+      <svg width="36" height="22" viewBox="0 0 90 55" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;">
+        <ellipse cx="45" cy="28" rx="28" ry="16" fill="rgba(27,42,74,0.35)"/>
+        <circle cx="74" cy="20" r="12" fill="rgba(27,42,74,0.35)"/>
+        <ellipse cx="81" cy="12" rx="5" ry="7" fill="rgba(27,42,74,0.45)" transform="rotate(20 81 12)"/>
+        <circle cx="79" cy="19" r="2" fill="white"/>
+        <ellipse cx="85" cy="22" rx="3" ry="2" fill="rgba(27,42,74,0.6)"/>
+        <path d="M17 24 Q6 14 10 8" stroke="rgba(27,42,74,0.4)" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <circle cx="30" cy="44" r="9" fill="rgba(27,42,74,0.45)"/>
+        <circle cx="30" cy="44" r="4" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="60" cy="44" r="9" fill="rgba(27,42,74,0.45)"/>
+        <circle cx="60" cy="44" r="4" fill="rgba(255,255,255,0.3)"/>
+      </svg>
+      שמור נסיעה
+    </button>
+    <div class="sync-status" id="syncStatus"></div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBoZM1dcSqTPjwK0oF4BHwhXAUCd8ryJIw",
+  authDomain: "wheely-7b0b8.firebaseapp.com",
+  projectId: "wheely-7b0b8",
+  storageBucket: "wheely-7b0b8.firebasestorage.app",
+  messagingSenderId: "405903225497",
+  appId: "1:405903225497:web:8066c2813a9627bf00fe08"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const MILESTONES = [
+  { id: 'm1',  name: 'פלורנטין',              type: 'done',    date: '31.05.24', minutes: 8,  km: null, note: 'אצל יעלי' },
+  { id: 'm2',  name: 'פארק הירקון – מערב',    type: 'done',    date: '26.05.24', minutes: 15, km: 4,   note: '' },
+  { id: 'm3',  name: 'בריכת חורף רמת אביב',   type: 'done',    date: '27.05.24', minutes: 20, km: 3,   note: '' },
+  { id: 'm3b', name: 'בריכת חורף רמת אביב',   type: 'current', date: '10.06.24', minutes: 20, km: 3,   note: 'שיא! 20 דקות 🎉' },
+  { id: 'm4',  name: 'נסיעה של 30 דקות',       type: 'future',  note: 'רמת גן, גבעתיים' },
+  { id: 'm5',  name: 'נסיעה של 45 דקות',       type: 'future',  note: 'פתח תקווה' },
+  { id: 'm6',  name: 'נסיעה של שעה',           type: 'future',  note: 'נתניה, קיסריה' },
+  { id: 'm7',  name: 'חיפה',                   type: 'future',  note: '' },
+  { id: 'm8',  name: '🏔️ מעיין ברוך',          type: 'goal',    note: 'היעד הצפוני' },
+  { id: 'm9',  name: '🏖️ אילת',               type: 'goal',    note: 'היעד הדרומי' },
+];
+
+let userTrips = [];
+
+function fmtDate(iso) {
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y.slice(2)}`;
+}
+function metaStr(s) {
+  const parts = [];
+  if (s.date)    parts.push(s.date);
+  if (s.minutes) parts.push(`${s.minutes} דק׳`);
+  if (s.km)      parts.push(`${s.km} ק״מ`);
+  return parts.join(' · ');
+}
+
+function render() {
+  const road = document.getElementById('road');
+  road.querySelectorAll('.stop').forEach(el => el.remove());
+
+  const userStops = userTrips.map(t => ({
+    id: t.id, fbId: t.fbId, name: t.dest, type: 'done',
+    date: fmtDate(t.date), minutes: t.minutes, km: t.km || null,
+    note: t.note, photo: t.photo, user: true
+  }));
+
+  const order = { done: 0, current: 0, future: 1, goal: 2 };
+  const all = [...MILESTONES, ...userStops].sort((a,b) => {
+    if (order[a.type] !== order[b.type]) return order[a.type] - order[b.type];
+    return (a.minutes||999) - (b.minutes||999);
+  });
+
+  all.forEach(s => {
+    const el = document.createElement('div');
+    el.className = `stop ${s.type}`;
+    el.dataset.id = s.id;
+    const meta = metaStr(s);
+    el.innerHTML = `
+      <div class="stop-dot ${s.photo ? 'has-photo' : ''}" onclick="toggleStop('${s.id}')"
+        ${s.photo ? `style="background-image:url('${s.photo}')"` : ''}>
+        <div class="dot-inner"></div>
+      </div>
+      <div class="stop-inline" onclick="toggleStop('${s.id}')">
+        <span class="stop-inline-name">${s.name}</span>
+        ${meta ? `<span class="stop-inline-meta">${meta}</span>` : ''}
+      </div>
+      <div class="stop-detail" id="detail-${s.id}">
+        <div class="stop-detail-inner">
+          ${s.note ? `<div class="detail-note">${s.note}</div>` : ''}
+          ${meta ? `<div class="detail-row"><span class="detail-chip">${meta}</span></div>` : ''}
+          ${(s.type === 'done' || s.type === 'current') ? `
+            <div class="photo-zone" id="pz-${s.id}">
+              ${s.photo
+                ? `<img src="${s.photo}" alt="תמונה" />`
+                : `<div class="photo-placeholder">📷 הוסף תמונה</div>
+                   <input type="file" accept="image/*" onchange="addPhoto('${s.fbId||''}','${s.id}',this)" />`
+              }
+            </div>
+            <button class="waze-btn" onclick="waze('${encodeURIComponent(s.name)}')">נווט ב-Waze ↗</button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    road.appendChild(el);
+  });
+  updateProgressLine();
+}
+
+function toggleStop(id) {
+  const detail = document.getElementById('detail-' + id);
+  if (detail) detail.classList.toggle('open');
+  setTimeout(updateProgressLine, 360);
+}
+window.toggleStop = toggleStop;
+
+function updateProgressLine() {
+  const stops = document.querySelectorAll('.stop.done, .stop.current');
+  if (!stops.length) return;
+  const last = stops[stops.length - 1];
+  const roadEl = document.getElementById('road');
+  const dotEl = last.querySelector('.stop-dot');
+  const h = (dotEl.getBoundingClientRect().top + 10) - roadEl.getBoundingClientRect().top;
+  document.getElementById('progressLine').style.height = Math.max(0, h) + 'px';
+}
+
+// ── FIRESTORE REALTIME ────────────────────────────────────────────────────────
+const q = query(collection(db, 'trips'), orderBy('createdAt', 'asc'));
+onSnapshot(q, snapshot => {
+  userTrips = snapshot.docs.map(doc => ({ fbId: doc.id, ...doc.data() }));
+  render();
+});
+
+// ── ADD TRIP ──────────────────────────────────────────────────────────────────
+window.addTrip = async function() {
+  const dest    = document.getElementById('fDest').value.trim();
+  const date    = document.getElementById('fDate').value;
+  const minutes = parseInt(document.getElementById('fMin').value) || 0;
+  const km      = parseFloat(document.getElementById('fKm').value) || null;
+  const note    = document.getElementById('fNote').value.trim();
+  if (!dest || !date) { alert('נא למלא יעד ותאריך'); return; }
+
+  const status = document.getElementById('syncStatus');
+  status.textContent = 'שומר...';
+  status.className = 'sync-status';
+
+  try {
+    await addDoc(collection(db, 'trips'), {
+      dest, date, minutes, km, note, photo: null,
+      createdAt: Date.now()
+    });
+    status.textContent = '✓ נשמר ומשותף';
+    status.className = 'sync-status ok';
+    ['fDest','fMin','fKm','fNote'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+    setTimeout(() => status.textContent = '', 3000);
+  } catch(e) {
+    status.textContent = 'שגיאה בשמירה';
+    status.className = 'sync-status err';
+  }
+}
+
+// ── ADD PHOTO ─────────────────────────────────────────────────────────────────
+window.addPhoto = function(fbId, localId, input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const base64 = e.target.result;
+    if (fbId) {
+      try {
+        await updateDoc(doc(db, 'trips', fbId), { photo: base64 });
+      } catch(err) { console.error(err); }
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+window.waze = function(dest) { window.open(`https://waze.com/ul?q=${dest}&navigate=yes`, '_blank'); }
+
+document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+window.addEventListener('resize', updateProgressLine);
+</script>
+</body>
+</html>
