@@ -99,6 +99,42 @@
   </div>
 </div>
 
+<!-- PUBLIC INVITE SECTION -->
+<div class="add-section" style="display:block;margin-top:40px;">
+  <div class="add-label">רוצים שווילי יבוא לבקר? 🐾</div>
+  <div class="add-card">
+    <div class="field">
+      <label>השם שלך</label>
+      <input type="text" id="invName" placeholder="השם שלך" />
+    </div>
+    <div class="field">
+      <label>הכתובת שלך</label>
+      <input type="text" id="invAddr" placeholder="רחוב ועיר" />
+    </div>
+    <button class="add-btn" onclick="requestVisit()" style="background:linear-gradient(135deg,#C8973A,#E8B96A);color:#1B2A4A;">
+      🐾 שלחו בקשת ביקור לווילי!
+    </button>
+    <div id="invResult" style="margin-top:12px;font-size:0.82rem;color:var(--gold-light);text-align:center;line-height:1.6;display:none;"></div>
+  </div>
+</div>
+
+<!-- INVITATION CARD -->
+<div id="invCard" style="display:none;max-width:480px;margin:24px auto;padding:0 28px;">
+  <div style="background:linear-gradient(160deg,#1B2A4A 0%,#0f1e38 100%);border:1.5px solid rgba(200,151,58,0.4);border-radius:20px;overflow:hidden;text-align:center;">
+    <img src="file_0000000047647243aa4579120f3549bb.png" style="width:100%;display:block;" />
+    <div style="padding:24px 20px 28px;">
+      <div style="font-size:0.72rem;letter-spacing:0.2em;color:rgba(200,151,58,0.7);text-transform:uppercase;margin-bottom:10px;">ווילי בדרך!</div>
+      <div id="cardName" style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:#E8B96A;margin-bottom:8px;"></div>
+      <div id="cardDate" style="font-size:0.95rem;color:rgba(255,255,255,0.7);margin-bottom:20px;line-height:1.6;"></div>
+      <div style="display:flex;justify-content:center;">
+        <button onclick="sendWhatsapp()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);border-radius:10px;padding:12px 28px;color:#25D366;font-family:'DM Sans',sans-serif;font-size:0.9rem;cursor:pointer;font-weight:600;">
+          💬 שלחו לווילי בוואטסאפ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="add-section" id="adminSection" style="display:none">
   <div class="add-label">הוספת נקודה</div>
   <div class="add-card">
@@ -128,6 +164,32 @@
   </div>
 </div>
 
+<!-- NEXT TRIP PLANNER -->
+<div class="add-section" id="nextTripSection" style="display:none">
+  <div class="add-label">הנסיעה הבאה 🐾</div>
+  <div class="add-card">
+    <div class="field">
+      <label>שם / יעד</label>
+      <input type="text" id="ntName" placeholder="יעלי ברמת השרון, פארק כלבים..." />
+    </div>
+    <div class="field">
+      <label>כתובת</label>
+      <input type="text" id="ntAddr" placeholder="כתובת מלאה" />
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="add-btn" style="flex:1;margin:0" onclick="openWazeForDistance()">פתח Waze למרחק</button>
+    </div>
+    <div class="field">
+      <label>כמה ק"מ הציג Waze?</label>
+      <input type="number" id="ntKm" placeholder="למשל: 12" min="1" step="0.5" />
+    </div>
+    <button class="add-btn" onclick="calcAndInvite()" style="background:rgba(37,211,102,0.8);">
+      📲 חשב ושלח הזמנה בוואטסאפ
+    </button>
+    <div id="ntResult" style="margin-top:12px;font-size:0.82rem;color:var(--gold-light);text-align:center;line-height:1.6;"></div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -154,12 +216,14 @@ window.handleTitleTap = function() {
     if (isAdmin) {
       isAdmin = false;
       document.getElementById('adminSection').style.display = 'none';
+      document.getElementById('nextTripSection').style.display = 'none';
       render();
     } else {
       const pw = prompt('סיסמה:');
       if (pw === '1974') {
         isAdmin = true;
         document.getElementById('adminSection').style.display = 'block';
+        document.getElementById('nextTripSection').style.display = 'block';
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
         render();
       } else if (pw !== null) alert('סיסמה שגויה');
@@ -293,7 +357,108 @@ window.deleteTrip = async function(fbId) {
   catch(err) { alert('שגיאה: '+err.message); }
 }
 
+// ── GEOCODING + INVITE ───────────────────────────────────────────────────────
+const MY_PHONE = 'PHONE_NUMBER_HERE'; // הכניסי את המספר שלך: 972501234567
+let currentInviteMsg = '';
+
+const TLV = { lat: 32.0853, lng: 34.7818 };
+
+function distanceKm(lat, lng) {
+  const R = 6371;
+  const dLat = (lat - TLV.lat) * Math.PI / 180;
+  const dLng = (lng - TLV.lng) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(TLV.lat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+window.requestVisit = async function() {
+  const name = document.getElementById('invName').value.trim();
+  const addr = document.getElementById('invAddr').value.trim();
+  if (!name || !addr) { alert('נא למלא שם וכתובת 🐾'); return; }
+
+  const result = document.getElementById('invResult');
+  result.textContent = '🔍 מחפש כתובת...';
+  result.style.display = 'block';
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr+', ישראל')}&format=json&limit=1`);
+    const data = await res.json();
+    if (!data.length) { result.textContent = '❌ לא מצאנו את הכתובת, נסי להיות יותר מדויקת'; return; }
+
+    const km = distanceKm(parseFloat(data[0].lat), parseFloat(data[0].lon));
+    const maxKm = Math.max(...allStops.filter(s=>s.type==='done'||s.type==='current').map(s=>s.km||0), 1);
+    const remaining = Math.max(0, km - maxKm);
+    const weeksLeft = Math.ceil(remaining / 2);
+
+    let dateText, cardDateText;
+    if (weeksLeft <= 0) {
+      dateText = '✅ ווילי מוכן לבוא עכשיו!';
+      cardDateText = 'מוכן לבוא עכשיו! 🎉';
+    } else {
+      const date = new Date();
+      date.setDate(date.getDate() + weeksLeft * 7);
+      const d = date.toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
+      dateText = `🐾 ווילי יוכל להגיע אליך\nבסביבות ${d}`;
+      cardDateText = `בסביבות ${d}\n${km} ק"מ מת"א · עוד ~${weeksLeft} שבועות`;
+    }
+
+    currentInviteMsg = `היי! 🐾🚗\n${name} כאן!\nרוצה שווילי יבוא לבקר אותי ב${addr}\n\n${dateText.replace('🐾 ','')}`;
+
+    result.textContent = dateText;
+
+    // Show invitation card
+    document.getElementById('cardName').textContent = name + ' 🐾';
+    document.getElementById('cardDate').textContent = cardDateText;
+    document.getElementById('invCard').style.display = 'block';
+    document.getElementById('invCard').scrollIntoView({behavior:'smooth'});
+
+  } catch(e) {
+    result.textContent = '❌ שגיאה בחיפוש הכתובת';
+  }
+}
+
+window.shareCard = function() {
+  alert('צלמי מסך של הכרטיס ושלחי לחברים! 📸🐾');
+}
+
+window.sendWhatsapp = function() {
+  window.open(`https://wa.me/${MY_PHONE}?text=${encodeURIComponent(currentInviteMsg)}`, '_blank');
+}
+
 window.waze = dest => window.open(`https://waze.com/ul?q=${dest}&navigate=yes`,'_blank');
+
+window.openWazeForDistance = function() {
+  const addr = document.getElementById('ntAddr').value.trim();
+  if (!addr) { alert('נא למלא כתובת'); return; }
+  window.open(`https://waze.com/ul?q=${encodeURIComponent(addr)}&navigate=yes`, '_blank');
+}
+
+window.calcAndInvite = function() {
+  const name = document.getElementById('ntName').value.trim();
+  const km = parseFloat(document.getElementById('ntKm').value);
+  if (!name || !km) { alert('נא למלא שם וק"מ'); return; }
+
+  const maxKm = Math.max(...allStops.filter(s=>s.type==='done'||s.type==='current').map(s=>s.km||0), 1);
+  const remaining = Math.max(0, km - maxKm);
+  const weeksLeft = Math.ceil(remaining / 2);
+
+  let result, msg;
+  if (weeksLeft <= 0) {
+    result = `✅ ווילי מוכן עכשיו! (${maxKm} ק"מ היום, ${km} ק"מ אליך)`;
+    msg = `היי! 🐾🚗\nווילי מוכן לבוא אליך ל${name}!\nמתי מתאים? נתאם!\n\n(עוקבים אחרי המסע שלו: https://mycd1974-gif.github.io/Wheely)`;
+  } else {
+    const date = new Date();
+    date.setDate(date.getDate() + weeksLeft * 7);
+    const d = date.toLocaleDateString('he-IL', { day:'numeric', month:'long', year:'numeric' });
+    result = `🐾 ווילי יגיע בסביבות ${d}\n(${maxKm} ק"מ היום → ${km} ק"מ נדרש → עוד ~${weeksLeft} שבועות)`;
+    msg = `היי! 🐾🚗\nווילי בדרך אליך ל${name}!\n\nהיום הוא מסוגל ${maxKm} ק"מ, ואת/ה במרחק ${km} ק"מ.\nלפי הקצב שלו — נגיע בסביבות ${d} 😄\n\nעוקבים אחרי המסע:\nhttps://mycd1974-gif.github.io/Wheely`;
+  }
+
+  document.getElementById('ntResult').textContent = result;
+  setTimeout(() => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  }, 500);
+}
 window.addEventListener('resize', updateProgressLine);
 </script>
 </body>
