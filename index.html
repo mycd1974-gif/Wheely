@@ -657,21 +657,20 @@ async function loadPending() {
 
 window.approveInvite = async function(fbId, name, addr, cardDate, km, weeksLeft) {
   try {
-    const maxOrder = allStops.reduce((m,s) => Math.max(m, s.order||0), 0);
+    const maxDoneOrder = allStops.filter(s=>s.type==='done'||s.type==='current'||s.type==='future').reduce((m,s) => Math.max(m, s.order||0), 0);
     await addDoc(collection(db,'stops'), {
       name: `הוזמן לווילי ביקור`,
       nameAdmin: name,
       addrAdmin: addr,
       note: cardDate,
       type: 'future',
-      order: maxOrder + 1,
+      order: maxDoneOrder + 1,
       createdAt: Date.now(),
       photo: null, date: '', minutes: 0, km: null
     });
-    // Mark as approved but keep in journal
     await updateDoc(doc(db,'invitations',fbId), { approved: true });
-    loadPending();
     alert(`✅ ${name} נוסף לכביש!`);
+    loadPending();
   } catch(e) { alert('שגיאה: '+e.message); }
 }
 </script>
