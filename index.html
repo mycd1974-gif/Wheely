@@ -117,7 +117,6 @@
     <div style="font-size:0.85rem;color:rgba(255,255,255,0.65);line-height:1.8;">
       זו הדרך שלנו להשאיר את הטראומות שעבר מאחוריו<br>
       שייזכה לצבור חוויות טובות<br>
-      בדרך<br>
       באהבה 🚗
     </div>
   </div>
@@ -268,6 +267,7 @@ window.handleTitleTap = function() {
       document.getElementById('adminSection').style.display = 'none';
       document.getElementById('nextTripSection').style.display = 'none';
       document.getElementById('pendingSection').style.display = 'none';
+      document.getElementById('adminIndicator').style.display = 'none';
       render();
     } else {
       const pw = prompt('סיסמה:');
@@ -276,6 +276,7 @@ window.handleTitleTap = function() {
         document.getElementById('adminSection').style.display = 'block';
         document.getElementById('nextTripSection').style.display = 'block';
         document.getElementById('pendingSection').style.display = 'block';
+        document.getElementById('adminIndicator').style.display = 'block';
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
         render();
         loadPending();
@@ -582,6 +583,11 @@ document.addEventListener('click', e => {
     const msg = `היי! 🐾\nיש לי המלצה למקום שווילי יאהב!\n\nשם המקום: \nכתובת: \nלמה זה מושלם לכלבים: `;
     window.open(`https://wa.me/${MY_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
   }
+  const approveBtn = e.target.closest('.approve-btn');
+  if (approveBtn) {
+    const { fbid, name, addr, carddate } = approveBtn.dataset;
+    approveInvite(fbid, name, addr, carddate);
+  }
 });
 
 window.openWazeForDistance = function() {
@@ -642,7 +648,11 @@ async function loadPending() {
         <div style="font-weight:500;font-size:0.9rem;margin-bottom:4px;">${i.name}</div>
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">${i.addr} · ${i.cardDate}</div>
         <div style="display:flex;gap:8px;">
-          <button onclick="approveInvite('${i.fbId}','${i.name.replace(/'/g,"\\'")}','${i.addr}','${(i.cardDate||'').replace(/\n/g,' ').replace(/'/g,"\\'")}','${i.km||0}','${i.weeksLeft||0}')" 
+          <button class="approve-btn"
+            data-fbid="${i.fbId}"
+            data-name="${(i.name||'').replace(/"/g,'&quot;')}"
+            data-addr="${(i.addr||'').replace(/"/g,'&quot;')}"
+            data-carddate="${(i.cardDate||'').replace(/"/g,'&quot;').replace(/\n/g,' ')}"
             style="background:var(--gold-pale);border:1px solid var(--gold);border-radius:8px;padding:7px 14px;color:var(--gold-light);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;flex:1;">
             ✅ הוסף לכביש
           </button>
