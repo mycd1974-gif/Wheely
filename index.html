@@ -242,7 +242,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBoZM1dcSqTPjwK0oF4BHwhXAUCd8ryJIw",
@@ -627,27 +627,35 @@ window.calcAndInvite = function() {
 window.addEventListener('resize', updateProgressLine);
 
 async function loadPending() {
-  const { getDocs, query: q2, where } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   try {
     const snap = await getDocs(collection(db, 'invitations'));
     const list = document.getElementById('pendingList');
     if (!list) return;
-    const invites = snap.docs.map(d => ({ fbId: d.id, ...d.data() })).filter(i => !i.approved);
-    if (!invites.length) { list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">אין הזמנות ממתינות</div>'; return; }
-    list.innerHTML = invites.map(i => `
+    const invites = snap.docs.map(d => ({ fbId: d.id, ...d.data() }));
+    const pending = invites.filter(i => !i.approved);
+    if (!pending.length) { 
+      list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">אין הזמנות ממתינות</div>'; 
+      return; 
+    }
+    list.innerHTML = pending.map(i => `
       <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;">
         <div style="font-weight:500;font-size:0.9rem;margin-bottom:4px;">${i.name}</div>
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">${i.addr} · ${i.cardDate}</div>
-        <button onclick="approveInvite('${i.fbId}','${i.name.replace(/'/g,"\\'")}','${i.addr}','${i.cardDate.replace(/\n/g,' ')}')" 
-          style="background:var(--gold-pale);border:1px solid var(--gold);border-radius:8px;padding:7px 14px;color:var(--gold-light);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;">
-          ✅ הוסף לכביש
-        </button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="approveInvite('${i.fbId}','${i.name.replace(/'/g,"\\'")}','${i.addr}','${(i.cardDate||'').replace(/\n/g,' ').replace(/'/g,"\\'")}','${i.km||0}','${i.weeksLeft||0}')" 
+            style="background:var(--gold-pale);border:1px solid var(--gold);border-radius:8px;padding:7px 14px;color:var(--gold-light);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;flex:1;">
+            ✅ הוסף לכביש
+          </button>
+        </div>
       </div>
     `).join('');
-  } catch(e) { console.error(e); }
+  } catch(e) { 
+    console.error(e); 
+    document.getElementById('pendingList').innerHTML = '<div style="color:rgba(200,100,100,0.7);font-size:0.78rem;">שגיאה בטעינת הזמנות</div>';
+  }
 }
 
-window.approveInvite = async function(fbId, name, addr, cardDate) {
+window.approveInvite = async function(fbId, name, addr, cardDate, km, weeksLeft) {
   try {
     const maxOrder = allStops.reduce((m,s) => Math.max(m, s.order||0), 0);
     await addDoc(collection(db,'stops'), {
@@ -660,6 +668,7 @@ window.approveInvite = async function(fbId, name, addr, cardDate) {
       createdAt: Date.now(),
       photo: null, date: '', minutes: 0, km: null
     });
+    // Mark as approved but keep in journal
     await updateDoc(doc(db,'invitations',fbId), { approved: true });
     loadPending();
     alert(`✅ ${name} נוסף לכביש!`);
